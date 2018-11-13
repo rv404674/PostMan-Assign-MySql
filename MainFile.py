@@ -1,5 +1,19 @@
 import mysql.connector
 import re
+from slackclient import SlackClient
+
+
+
+# This dict has limits for various types of unsigned as well as signed int.
+limitDict = { 'tinyintsigned':'127', 'tinyintunsigned':'255','smallintsigned':'32767', 'smallintunsigned':'65535', 'mediumintsigned':'8388607', 'mediumintunsigned':'16777215','intsigned':'2147483647','intunsigned':'4294967295','bigintsigned':'9223372036854775807', 'bigintunsigned':'18446744073709551615' }
+
+#Function that sent alert message to slack - i am using a channel name #general in my startup workspace, you can use your"
+def slack_message(message, channel):
+    token = 'xoxp-214321026005-368057998214-478812665605-6292bb0989d3c96b383e6485c2cabe89'
+    sc = SlackClient(token)
+    sc.api_call('chat.postMessage', channel=channel, 
+                text=message, username='rv404674',
+                icon_emoji=':robot_face:')
 
 
 mydb = mysql.connector.connect(
@@ -11,8 +25,6 @@ mydb = mysql.connector.connect(
 
 mycursor = mydb.cursor()
 
-# This dict has limits for various types of unsigned as well as signed int.
-limitDict = { 'tinyintsigned':'127', 'tinyintunsigned':'255','smallintsigned':'32767', 'smallintunsigned':'65535', 'mediumintsigned':'8388607', 'mediumintunsigned':'16777215','intsigned':'2147483647','intunsigned':'4294967295','bigintsigned':'9223372036854775807', 'bigintunsigned':'18446744073709551615' }
 
 mycursor.execute("SHOW TABLES")
 
@@ -26,8 +38,8 @@ for (table_name,) in tables:
     x= mycursor.fetchall()
 
     print(x)
-    print(x[0][1]) # contains int type of id
-    print(x[0][5]) # stores whether there is an 'auto_increment' field or not
+    # x[0][1] - contains int type of id
+    # x[0][5] - stores whether there is an 'auto_increment' field or not
 
     if(x[0][5] == 'auto_increment'):
         print(f"{table_name} has a AUTOINCREMENTED id")
@@ -54,18 +66,27 @@ for (table_name,) in tables:
                 if x.startswith(intType) and 'unsigned' in x:
                     maxLimit = int(limitDict[x])
 
-                    print(f"detected {intType} unsigned")
-                    #check whether cur value of id field is just 5 less than threshold value
+                    #print(f"detected {intType} unsigned")
+
+                    #Send an alert to slack when cur value of id field is just 5 less than threshold value
                     if(maxLimit - curIdVal <=5):
-                        print("Send alert to slack")
+                        x= maxLimit - curIdVal
+                        msg = f"ALERT - You are just {x} away from the maximum threshold value for auto incremented id field for TABLE {table_name}"
+                        slack_message(msg, 'general')
+                        print('ALERT MESSAGE TO SLACK SENT')
             else:
                 if ( x.startswith(intType) and ( 'unsigned' not in x ) ):
                     print(limitDict[x])
                     maxLimit = int(limitDict[x])
 
-                    print(f"detected {intType} signed")
+                    #print(f"detected {intType} signed")
+
+                    #Send an alert to slack when cur value of id field is just 5 less than threshold value
                     if(maxLimit - curIdVal <=5):
-                        print("Send alert to Slack")
+                        x= maxLimit - curIdVal
+                        msg = f"ALERT - You are just {x} away from the maximum threshold value for auto incremented if field for TABLE {table_name}"
+                        slack_message(msg, 'general')
+                        print('ALERT MESSAGE TO SLACK SENT')
 
 
 
