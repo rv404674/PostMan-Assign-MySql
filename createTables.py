@@ -11,8 +11,8 @@ mycursor = mydb.cursor()
 
 
 mycursor.execute("DROP TABLE customers")
-mycursor.execute("DROP TABLE animals")
-mycursor.execute("DROP TABLE frameworks")
+#mycursor.execute("DROP TABLE animals")
+#mycursor.execute("DROP TABLE frameworks")
 
 #Create a table customers with auto_increment id value
 
@@ -26,6 +26,9 @@ val = [
         ]
 
 mycursor.executemany(sql,val)
+
+#Maximum value for unsigned tiny int is 255. I am deliberately putting id as 251, so that an alert will be thrown.
+mycursor.execute("INSERT INTO customers (id,name,address) VALUES (251,'Sachin','Haryana')")
 mydb.commit()
 
 # print all rows of customers table
@@ -42,7 +45,7 @@ mycursor.execute("CREATE TABLE animals (id MEDIUMINT AUTO_INCREMENT PRIMARY KEY,
 
 sql = "INSERT INTO animals (name) VALUES ('dog'),('cat')"
 mycursor.execute(sql)
-mycursor.execute("INSERT INTO animals (id,name) VALUES (100043,'rabbit')")
+mycursor.execute("INSERT INTO animals (id,name) VALUES (8388604,'rabbit')")
 mydb.commit()
 
 #print all rows of animal 
